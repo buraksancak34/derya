@@ -48,6 +48,16 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
+
+        /* Yazdırma ve PDF Ayarları */
+        @media print {
+            body { background-color: white; }
+            aside, .no-print { display: none !important; }
+            main { margin: 0; padding: 0; overflow: visible; height: auto; }
+            .tab-content { display: block !important; page-break-after: always; }
+            .chart-container { max-width: 100%; height: 350px; page-break-inside: avoid; }
+            .code-card { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
+        }
     </style>
     <!-- Chosen Palette: Nötr Kurumsal (Slate background, Indigo/Blue for neutral categories, Green for climate-positive codes, Red/Orange for fossil/barrier codes, Gray for structural codes) -->
     <!-- Application Structure Plan: 
@@ -95,7 +105,7 @@
             </ul>
         </nav>
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
-            MAXQDA Uyumlu Kodlama Çerçevesi
+            MAXQDA Uyumlu Çerçeve
         </div>
     </aside>
 
@@ -103,14 +113,20 @@
     <main class="flex-1 h-full overflow-y-auto bg-slate-50 relative">
         
         <!-- Header -->
-        <header class="bg-white border-b border-slate-200 px-8 py-5 sticky top-0 z-10 flex justify-between items-center">
+        <header class="bg-white border-b border-slate-200 px-8 py-5 sticky top-0 z-10 flex flex-wrap justify-between items-center gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-800" id="page-title">Revize Edilmiş Nötr Kodlama Şablonu</h2>
-                <p class="text-sm text-slate-500 mt-1">Kategoriler nötrleştirildi ve altlarına hem zıt hem paralel kodlar eklendi (Min. 4 kod/kategori).</p>
+                <p class="text-sm text-slate-500 mt-1">Kategoriler nötrleştirildi ve altlarına hem zıt hem paralel kodlar eklendi.</p>
             </div>
-            <div class="flex gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">İklim Odaklı Veriler</span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">Geleneksel/Fosil Veriler</span>
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex gap-2 mr-4">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">İklim Odaklı Veriler</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 border border-rose-200">Geleneksel/Fosil Veriler</span>
+                </div>
+                <!-- YENİ: PDF / Yazdırma Butonu -->
+                <button onclick="window.print()" class="no-print bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                    <span>🖨️</span> PDF/Tez İçin Çıktı Al
+                </button>
             </div>
         </header>
 
@@ -119,8 +135,8 @@
             <!-- TAB 1: YENİ KOD ŞABLONU (INTERACTIVE CODEBOOK) -->
             <section id="tab-yapi" class="tab-content active">
                 <div class="mb-6 bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
-                    <h3 class="text-indigo-800 font-semibold mb-1">Şablonun Mantığı:</h3>
-                    <p class="text-sm text-indigo-700">Dikkat ederseniz artık "İklim engeldir" diye bir kategori yok. Kategori adı: <strong>"İklim Değişikliğinin Çerçevelenişi"</strong> (Nötr). Bu şemsiyenin altında, görüşmecilerin zıt fikirleri (engel görenler vs. fırsat görenler) alt kodlar olarak çarpıştırılmıştır. Bu yapı tezinizde tartışma (discussion) yazmanızı çok kolaylaştırır.</p>
+                    <h3 class="text-indigo-800 font-semibold mb-1">Şablonun Mantığı (Nötralizasyon):</h3>
+                    <p class="text-sm text-indigo-700">Artık "İklim engeldir" diye yönlendirmeli bir kategori yok. Kategori adı: <strong>"İklim Değişikliğinin Çerçevelenişi"</strong> (Nötr). Bu şemsiyenin altında, görüşmecilerin zıt fikirleri (engel görenler vs. fırsat görenler) alt kodlar olarak çarpıştırılmıştır. Her kategoride en az 4 kod bulunmaktadır.</p>
                 </div>
 
                 <!-- Themes Container (Rendered via JS) -->
@@ -132,13 +148,13 @@
             <!-- TAB 2: EĞİLİM ANALİZLERİ (DASHBOARD) -->
             <section id="tab-dashboard" class="tab-content">
                 <div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-800 mb-2">Söylem Dağılımı: Zıtlıkların Analizi</h3>
-                    <p class="text-sm text-slate-600 mb-6">Bu grafikler, revize edilen nötr kategoriler altındaki kodların "Eğilim" (Stance) ağırlıklarını göstermektedir. Verilerinizdeki zıt görüşlerin frekans analizini temsil eder.</p>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Söylem Dağılımı: Zıtlıkların Frekans Analizi</h3>
+                    <p class="text-sm text-slate-600 mb-6">Bu grafikler, revize edilen nötr kategoriler altındaki kodların "Eğilim" (Stance) ağırlıklarını göstermektedir. Verilerinizdeki zıt görüşlerin frekans analizini temsil eder. (Tez bulguları bölümü için uygundur).</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Chart 1: Genel Eğilim Dağılımı -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                            <h4 class="text-center font-medium text-slate-700 mb-4">Kodların Genel Yönelimi</h4>
+                            <h4 class="text-center font-medium text-slate-700 mb-4">Kodların Genel Yönelimi (Tüm Temalar)</h4>
                             <div class="chart-container h-[300px]">
                                 <canvas id="doughnutChart"></canvas>
                             </div>
@@ -203,19 +219,16 @@
             <!-- TAB 4: METODOLOJİ (METHODOLOGY) -->
             <section id="tab-metodoloji" class="tab-content">
                 <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose max-w-none">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4">Yeni Kodlama Yaklaşımının Gerekçesi</h3>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Yeni Kodlama Yaklaşımının Akademik Gerekçesi</h3>
                     <p class="text-slate-600 mb-4">
-                        Gelen soruda belirtilen <em>"2 kodla kategori mi olur? Hemen hemen her kategoride hem paralel hem zıt yönde veriler var bende"</em> tespiti, nitel araştırmaların en kritik kırılma noktalarından biridir. 
+                        Gelen soruda belirtilen <em>"2 kodla kategori mi olur? Hemen hemen her kategoride hem paralel hem zıt yönde veriler var bende"</em> tespiti, nitel araştırmaların en kritik kırılma noktalarından biridir. Bu durum, veri analizi yöntemleri literatüründe (örn. Corbin & Strauss, Gömülü Teori) kategorilerin özellik ve boyutlarının doğru belirlenmesiyle çözülür.
                     </p>
-                    <p class="text-slate-600 mb-4">
-                        Önceki yapıda kategoriler "Arz Güvenliği Hegemonyası" gibi taraf tutan (yargı bildiren) başlıklardan oluşuyordu. Bu durum, "iklimi öncelik gören" zıt verileri bu kategori altına yerleştirmeyi imkânsız kılıyordu.
-                    </p>
-                    <h4 class="text-lg font-semibold text-slate-800 mt-6 mb-2">Neler Değiştirildi?</h4>
+                    <h4 class="text-lg font-semibold text-slate-800 mt-6 mb-2">Müdahale ve Optimizasyon:</h4>
                     <ul class="list-disc pl-5 text-slate-600 space-y-2">
-                        <li><strong>Kategoriler Nötrleştirildi:</strong> Örneğin, "İklimin İkinci Plana Atılması" kategorisi silindi. Yerine tamamen nötr olan <strong>"Öncelik Hiyerarşisi"</strong> kategorisi açıldı.</li>
+                        <li><strong>Kategoriler Nötrleştirildi:</strong> "Arz Güvenliği Hegemonyası" gibi taraf tutan kategoriler, zıt bulguları dışladığı için silindi. Yerine tamamen kapsayıcı olan <strong>"Öncelik Hiyerarşisi"</strong> kategorisi açıldı.</li>
                         <li><strong>Zıtlıklar Kod Düzeyine İndirildi:</strong> Nötr kategorinin (Öncelik Hiyerarşisi) altına; hem <em>"Arz Güvenliğinin Baskınlığı"</em> kodu, hem de zıttı olan <em>"İklimin Ana Eksen Olması Gerekliliği"</em> kodu eklendi.</li>
-                        <li><strong>Kod Sayısı Artırıldı:</strong> Literatürdeki doygunluk (saturation) kuralı gereği, alt başlıklar zenginleştirilerek her kategoriye en az 4 kod atandı.</li>
-                        <li><strong>Diyalektik Yapı Kuruldu:</strong> Tezin bulgularını yazarken; "Türkiye'nin öncelik hiyerarşisinde aktörler ikiye bölünmüştür: Bir yanda arz güvenliğini savunanlar (Kod 1), diğer yanda iklimi merkeze alanlar (Kod 2)" şeklinde muazzam bir tartışma (discussion) yazabilmenizin önü açıldı.</li>
+                        <li><strong>Veri Doygunluğu (Saturation):</strong> Literatürdeki kural gereği, alt başlıklar zenginleştirilerek her kategoriye mülakat metinlerindeki tüm aktör yansımalarını (devlet, özel sektör, sivil toplum) kapsayacak şekilde en az 4 kod atandı.</li>
+                        <li><strong>Tartışma (Discussion) Altyapısı:</strong> Bu diyalektik yapı sayesinde, bulgular bölümünde "Türkiye'nin iklim politikalarında aktörler söylemsel olarak bölünmüştür..." şeklinde güçlü teorik analizler yapılabilmesinin önü açılmıştır.</li>
                     </ul>
                 </div>
             </section>
@@ -529,6 +542,12 @@
         window.onload = () => {
             renderCodebook();
             // Chart rendering is deferred to when the tab is clicked to ensure container size is computed correctly
+        };
+
+        // Yazdırma işlemi öncesi hazırlık
+        window.onbeforeprint = function() {
+            // Yazdırmadan önce tüm grafiklerin görünür olduğundan emin olmak için sekmeleri açıyoruz
+            renderCharts();
         };
 
     </script>
