@@ -3,457 +3,534 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Derya & İlker - Bizim Dünyamız</title>
-    <!-- Tailwind CSS -->
+    <title>Türkiye'nin Enerji ve İklim Siyaseti: Nitel Veri Analizi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
-
+        /* Yalnızca grafik kapsayıcıları ve zaruri özel stiller için gömülü CSS */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #fff5f5 0%, #fff1f2 100%);
-            color: #4c0519;
-            margin: 0; padding: 0; overflow-x: hidden; min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slate-50 - Nötr ve sakin arka plan */
+            color: #1e293b;
         }
 
-        .romantic-font { font-family: 'Dancing Script', cursive; }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.65);
-            border: 1px solid rgba(255, 192, 203, 0.6);
-            backdrop-filter: blur(15px);
-            box-shadow: 0 10px 40px rgba(159, 18, 57, 0.04);
-            transition: all 0.4s ease;
-        }
-        
-        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 15px 50px rgba(159, 18, 57, 0.1); }
-
-        .admin-sidebar {
-            background: rgba(255, 255, 255, 0.98);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -15px 0 50px rgba(0, 0, 0, 0.08);
-            z-index: 999999;
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 450px;
         }
 
-        .custom-input {
-            background: #fff !important; border: 2px solid #ffe4e6 !important;
-            color: #881337 !important; padding: 12px !important;
-            border-radius: 16px !important; width: 100% !important;
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .custom-input:focus { border-color: #fb7185 !important; outline: none; }
-
-        .btn-love {
-            background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
-            color: white; border-radius: 20px; font-weight: 700;
-            transition: all 0.3s; cursor: pointer; border: none;
-        }
-        .btn-love:hover { filter: brightness(1.1); transform: scale(1.05); }
-
-        .hidden-mode { display: none !important; }
-        .heart-beat { animation: beat 1s infinite; display: inline-block; color: #e11d48; }
-        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-
-        #toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #4c0519; color: white; padding: 12px 24px;
-            border-radius: 50px; font-size: 14px; font-weight: 600;
-            z-index: 1000000; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        .tab-content.active {
+            display: block;
         }
 
-        .important-note {
-            color: #ef4444 !important;
-            font-weight: 800 !important;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        #daily-quote-area {
-            min-height: 140px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        /* Kod kartları için hover efektleri */
+        .code-card {
+            transition: all 0.2s ease;
         }
-
-        .quote-active-text {
-            animation: slideUp 1s ease forwards;
+        .code-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
+    <!-- Chosen Palette: Nötr Kurumsal (Slate background, Indigo/Blue for neutral categories, Green for climate-positive codes, Red/Orange for fossil/barrier codes, Gray for structural codes) -->
+    <!-- Application Structure Plan: 
+         1. Metodolojik Giriş: Kullanıcıya yeni kodlama mantığını açıklar.
+         2. İnteraktif Kod Kitabı: Kullanıcının talebi olan "nötr kategori ve zıt/paralel kodlar" yapısını hiyerarşik olarak gösterir.
+         3. Görsel Analiz (Dashboard): Kodların eğilimlerine göre dağılımını Chart.js ile görselleştirir.
+         4. Söylem (Alıntı) Eşleşmeleri: Verilen mülakat metinlerinin yeni kodlara nasıl oturduğunu gösterir. 
+         Neden Bu Yapı: Nitel veri analizinde tez/makale yazım sürecini simüle eder. Araştırmacı önce şablonu (codebook) görür, sonra frekansları (chart), en son da kanıtları (quotes) inceler. -->
+    <!-- Visualization & Content Choices:
+         - Hiyerarşik Kart Yapısı (HTML/Tailwind): Nötr kategoriler altındaki zıt kodları yan yana göstermek için. Gelişmiş CSS Grid ile kod zıtlıkları vurgulanır.
+         - Doughnut Chart (Chart.js): Kategorilerin ağırlıklarını göstermek için (Yüzde/Frekans - SVG KULLANILMADI).
+         - Bar Chart (Chart.js): Her kategorideki zıt eğilimlerin (İklim odaklı vs Geleneksel/Fosil) kıyaslanması için. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
-<body class="antialiased">
+<body class="antialiased h-screen flex overflow-hidden">
 
-    <div id="toast">İşlem Başarılı!</div>
-
-    <!-- Editör Paneli -->
-    <div id="admin-panel" class="fixed top-0 right-0 h-full w-80 admin-sidebar translate-x-full overflow-y-auto p-8 border-l border-rose-100">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-xl font-black text-rose-800 flex items-center gap-2">🛠️ Editör Paneli</h2>
-            <button onclick="window.toggleAdmin()" class="text-rose-300 hover:text-rose-600 text-3xl">&times;</button>
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full shadow-xl z-20 flex-shrink-0">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-xl font-bold tracking-tight text-slate-100">Nitel Analiz<span class="text-indigo-400">Paneli</span></h1>
+            <p class="text-xs text-slate-400 mt-2">Enerji & İklim Siyaseti Araştırması</p>
         </div>
-
-        <div class="flex gap-1 mb-8 bg-rose-50 p-1 rounded-2xl">
-            <button onclick="window.switchTab('notes')" id="tab-notes" class="tab-btn active flex-1 text-[10px] font-bold py-2 rounded-xl">NOT BIRAK</button>
-            <button onclick="window.switchTab('quotes')" id="tab-quotes" class="tab-btn inactive flex-1 text-[10px] font-bold py-2 rounded-xl">365 GÜN</button>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 px-3">
+                <li>
+                    <button onclick="switchTab('tab-yapi')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors bg-indigo-600 text-white" data-target="tab-yapi">
+                        <span class="text-lg">📊</span> Yeni Kod Şablonu
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('tab-dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="tab-dashboard">
+                        <span class="text-lg">📈</span> Eğilim Analizleri
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('tab-alintilar')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="tab-alintilar">
+                        <span class="text-lg">💬</span> Mülakat Kanıtları
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('tab-metodoloji')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="tab-metodoloji">
+                        <span class="text-lg">📌</span> Metodolojik Not
+                    </button>
+                </li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
+            MAXQDA Uyumlu Kodlama Çerçevesi
         </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 h-full overflow-y-auto bg-slate-50 relative">
         
-        <!-- Not Bırakma -->
-        <div id="sidebar-notes-content" class="space-y-4">
-            <h3 class="text-rose-600 text-[10px] font-black uppercase" id="note-target-label">Sevgiline Not Bırak</h3>
-            <textarea id="note-text" placeholder="Kalbinden geçenleri buraya dök..." class="custom-input h-32"></textarea>
-            <button onclick="window.addNote()" class="w-full py-4 btn-love text-sm">NOTU İLET</button>
-        </div>
-
-        <!-- 365 Gün Yönetimi -->
-        <div id="sidebar-quotes-content" class="hidden space-y-4">
-            <h3 class="text-rose-600 text-[10px] font-black uppercase">365 Günlük Mesaj Havuzu</h3>
-            <p class="text-[9px] text-rose-400 italic">Her satıra bir cümle yaz. Sırayla her gün bir tanesi görünecek.</p>
-            <textarea id="quotes-bulk" placeholder="Sözleri buraya alt alta girin..." class="custom-input h-64 text-xs"></textarea>
-            <button onclick="window.saveQuotes()" class="w-full py-4 btn-love text-sm">LİSTEYİ GÜNCELLE</button>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-6 py-12">
-        <header class="flex flex-col md:flex-row justify-between items-start mb-20 gap-12">
-            <div class="text-center md:text-left flex-1">
-                <h1 class="text-6xl md:text-8xl romantic-font text-rose-600 leading-tight">Derya ve İlker</h1>
-                <p class="text-rose-400 text-lg mt-2 font-medium tracking-wide">On yıldır aynı gökyüzüne bakmak... <span class="heart-beat">♥</span></p>
-                
-                <div class="mt-10 flex flex-col gap-8 items-center md:items-start w-full">
-                    <!-- Giriş ve Durum Paneli -->
-                    <div class="flex flex-wrap gap-3 justify-center md:justify-start items-center">
-                        <div id="mode-status" class="bg-white px-5 py-2.5 rounded-full border border-rose-100 text-rose-400 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                            <span id="mode-text">Gözlemci</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.login('Derya')" id="btn-login-derya" class="text-[10px] font-black uppercase tracking-widest text-rose-500 underline decoration-2 underline-offset-4 cursor-pointer">Derya</button>
-                            <span class="text-rose-200">|</span>
-                            <button onclick="window.login('İlker')" id="btn-login-ilker" class="text-[10px] font-black uppercase tracking-widest text-rose-500 underline decoration-2 underline-offset-4 cursor-pointer">İlker</button>
-                        </div>
-                        <button onclick="window.toggleAdmin()" id="manage-btn" class="hidden-mode btn-love px-8 py-2.5 text-[10px] uppercase shadow-lg ml-4">🛠️ Yönetim</button>
-                        <button onclick="window.logout()" id="logout-btn" class="hidden-mode text-[10px] font-black uppercase text-rose-300 ml-4 cursor-pointer">Çıkış</button>
-                    </div>
-
-                    <!-- Günlük Mesaj Alanı -->
-                    <div id="daily-quote-area" class="max-w-2xl w-full glass-card p-10 rounded-[3rem] border-rose-200">
-                        <div id="quote-display-box" class="text-center">
-                            <h4 class="text-[9px] font-black text-rose-300 uppercase tracking-[4px] mb-4">Günün Kalp Atışı</h4>
-                            <p id="current-quote" class="text-rose-800 text-xl md:text-2xl font-bold italic leading-relaxed">Görmek için giriş yapmalısın sevgilim...</p>
-                            <div class="h-1 w-20 bg-rose-200 mx-auto mt-6 rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-8 py-5 sticky top-0 z-10 flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800" id="page-title">Revize Edilmiş Nötr Kodlama Şablonu</h2>
+                <p class="text-sm text-slate-500 mt-1">Kategoriler nötrleştirildi ve altlarına hem zıt hem paralel kodlar eklendi (Min. 4 kod/kategori).</p>
             </div>
-
-            <!-- Sayaç Paneli -->
-            <div class="flex flex-col gap-6 w-full md:w-[380px]">
-                <div class="glass-card p-10 rounded-[3rem] text-center relative overflow-hidden">
-                    <div class="absolute -top-10 -right-10 text-rose-100 text-9xl opacity-20">♥</div>
-                    <h3 class="text-rose-400 text-[10px] font-black uppercase tracking-[3px] mb-4">Evliliğimizde</h3>
-                    <div id="marriage-counter" class="text-6xl font-black text-rose-600 mb-2">0</div>
-                    <p class="text-rose-400 text-sm font-bold uppercase tracking-widest">Muhteşem Gün</p>
-                </div>
-
-                <div class="glass-card p-8 rounded-[2.5rem] border-rose-50 text-center">
-                    <div class="grid grid-cols-1 gap-2">
-                        <p class="text-[10px] text-rose-300 font-black uppercase tracking-widest">Tanışma: 10 Aralık 2011</p>
-                        <p id="meeting-counter" class="text-3xl font-black text-rose-400">0</p>
-                        <p class="text-[10px] text-rose-300 font-black uppercase">Gündür Beraberiz</p>
-                    </div>
-                </div>
+            <div class="flex gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">İklim Odaklı Veriler</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">Geleneksel/Fosil Veriler</span>
             </div>
         </header>
 
-        <!-- Notlar Bölümü -->
-        <section id="notes-section" class="mt-20">
-            <h2 id="notes-title" class="text-3xl font-black text-rose-900 uppercase mb-8 px-4">📍 Özel Notlar</h2>
-            <div class="glass-card rounded-[3rem] overflow-hidden border-none shadow-xl min-h-[250px]">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead class="bg-rose-50 text-rose-400 uppercase text-[10px] font-black tracking-widest">
-                            <tr>
-                                <th class="px-8 py-6">TARİH</th>
-                                <th class="px-8 py-6">KİMDEN</th>
-                                <th class="px-8 py-6">MESAJ</th>
-                                <th class="px-8 py-6 text-right">EYLEM</th>
-                            </tr>
-                        </thead>
-                        <tbody id="notes-body" class="divide-y divide-rose-50">
-                            <tr><td colspan="4" class="p-24 text-center text-rose-200 italic font-bold">Notları sadece siz görebilirsiniz. Lütfen giriş yapın...</td></tr>
-                        </tbody>
-                    </table>
+        <div class="p-8 max-w-7xl mx-auto">
+            
+            <!-- TAB 1: YENİ KOD ŞABLONU (INTERACTIVE CODEBOOK) -->
+            <section id="tab-yapi" class="tab-content active">
+                <div class="mb-6 bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                    <h3 class="text-indigo-800 font-semibold mb-1">Şablonun Mantığı:</h3>
+                    <p class="text-sm text-indigo-700">Dikkat ederseniz artık "İklim engeldir" diye bir kategori yok. Kategori adı: <strong>"İklim Değişikliğinin Çerçevelenişi"</strong> (Nötr). Bu şemsiyenin altında, görüşmecilerin zıt fikirleri (engel görenler vs. fırsat görenler) alt kodlar olarak çarpıştırılmıştır. Bu yapı tezinizde tartışma (discussion) yazmanızı çok kolaylaştırır.</p>
                 </div>
-            </div>
-        </section>
 
-        <footer class="mt-32 text-center text-rose-300 text-xs font-bold pb-10 uppercase tracking-widest">
-            Sonsuzluğa kadar... Derya & İlker
-        </footer>
-    </div>
+                <!-- Themes Container (Rendered via JS) -->
+                <div id="themes-container" class="space-y-8">
+                    <!-- Dinamik olarak JS tarafından doldurulacak -->
+                </div>
+            </section>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            <!-- TAB 2: EĞİLİM ANALİZLERİ (DASHBOARD) -->
+            <section id="tab-dashboard" class="tab-content">
+                <div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Söylem Dağılımı: Zıtlıkların Analizi</h3>
+                    <p class="text-sm text-slate-600 mb-6">Bu grafikler, revize edilen nötr kategoriler altındaki kodların "Eğilim" (Stance) ağırlıklarını göstermektedir. Verilerinizdeki zıt görüşlerin frekans analizini temsil eder.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Chart 1: Genel Eğilim Dağılımı -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h4 class="text-center font-medium text-slate-700 mb-4">Kodların Genel Yönelimi</h4>
+                            <div class="chart-container h-[300px]">
+                                <canvas id="doughnutChart"></canvas>
+                            </div>
+                        </div>
 
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyCbIuOJeKNpJToMg2-PsblLtue-mzElUQY",
-            authDomain: "tezz-95f0d.firebaseapp.com",
-            projectId: "tezz-95f0d",
-            storageBucket: "tezz-95f0d.firebasestorage.app",
-            messagingSenderId: "87135277271",
-            appId: "1:87135277271:web:49cc5d5ee7b473bfa7a092",
-            measurementId: "G-D2WLJXGP67"
-        };
+                        <!-- Chart 2: Kategorilere Göre Zıtlıklar -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h4 class="text-center font-medium text-slate-700 mb-4">Kategorilerdeki "İklim vs Geleneksel" Çatışması</h4>
+                            <div class="chart-container h-[300px]">
+                                <canvas id="barChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-        const appId = 'derya-ilker-private-v2';
-        let currentUser = null; 
-        let allNotes = [], quotesPool = [];
+            <!-- TAB 3: MÜLAKAT KANITLARI (QUOTES) -->
+            <section id="tab-alintilar" class="tab-content">
+                <div class="mb-6">
+                    <p class="text-slate-600">Araştırma verilerinizden (mülakat dökümlerinizden) çekilen alıntıların yeni nötr kategorilere ve zıt kodlara nasıl entegre edildiğini aşağıdan inceleyebilirsiniz.</p>
+                </div>
 
-        const meetingDate = new Date('2011-12-10');
-        const marriageDate = new Date('2019-10-27');
+                <div class="space-y-4">
+                    <!-- Alıntı 1 -->
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-l-4 border-l-indigo-500 border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-800">Tema 2: Karar Alma Süreçleri ve Yönetişim</span>
+                            <span class="text-xs font-bold text-slate-400">Katılımcı: Hazal Hanım</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 mb-3">Nötr Kategori: Kurumsal Yapı ve Koordinasyon &nbsp;&gt;&nbsp; <span class="text-slate-500 font-normal">Kod: Mevzuat Değişikliklerinin Yarattığı İstikrarsızlık</span></div>
+                        <blockquote class="italic text-slate-600 border-l-2 border-slate-300 pl-4 py-1 mb-3">
+                            "...mevzuatların, yönetmeliklerin sürekli değişmesi gibi zorluklar, hem yatırımcının hem de bu konuda bir şeyler yapmaya çalışan yerel yönetimlerin karşısına çıkıyor... Bütün kurumların aynı doğrultuda hareket etmeye ihtiyacı var. Birinin başka kafayla, başka vizyonla bir şey söylemesi değil..."
+                        </blockquote>
+                    </div>
 
-        const showToast = (msg) => {
-            const t = document.getElementById('toast');
-            if(t) {
-                t.innerText = msg; t.style.opacity = "1";
-                setTimeout(() => t.style.opacity = "0", 3000);
-            }
-        };
+                    <!-- Alıntı 2 -->
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-l-4 border-l-rose-500 border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Tema 1: Siyasetin Öncelikleri</span>
+                            <span class="text-xs font-bold text-slate-400">Katılımcı: Cem (TÜSİAD örneği)</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 mb-3">Nötr Kategori: İklim Değişikliğinin Çerçevelenişi &nbsp;&gt;&nbsp; <span class="text-slate-500 font-normal">Kod: Dış Kaynaklı Yaptırım/Risk Odağı Olarak İklim</span></div>
+                        <blockquote class="italic text-slate-600 border-l-2 border-slate-300 pl-4 py-1 mb-3">
+                            "...iş dünyası tarafında iklim değişikliği 'İşte başımıza geliyor, dışarıdan bu konuda bize yaptırımlar gelecek' diyerek enerji siyasetini ona göre konuşuyorlar. Aslında çevresel kaygıdan ziyade gelecekteki riskler, ekonomik riskler ve faydalar bağlamında konuşuyorlar."
+                        </blockquote>
+                    </div>
 
-        const startApp = async () => {
-            try {
-                const app = initializeApp(firebaseConfig);
-                const db = getFirestore(app);
-                const auth = getAuth(app);
-                
-                await setPersistence(auth, browserLocalPersistence);
-                
-                // Kimlik doğrulama işlemi
-                await signInAnonymously(auth);
+                    <!-- Alıntı 3 -->
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-l-4 border-l-emerald-500 border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Tema 3: Sürdürülebilirlik ve Toplumsal Etki</span>
+                            <span class="text-xs font-bold text-slate-400">Katılımcı: Kod Rehberi (CSV)</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 mb-3">Nötr Kategori: Enerji Adaleti ve Yerel Katılım &nbsp;&gt;&nbsp; <span class="text-slate-500 font-normal">Kod: Yerel Halkın Dışlanması / Katılım Eksikliği</span></div>
+                        <blockquote class="italic text-slate-600 border-l-2 border-slate-300 pl-4 py-1 mb-3">
+                            "Yenilenebilir enerji projeleri enerji adaleti gözetilmeden yapılıyor. Karar alma süreçlerinde yerel halkın söz hakkı olmaması ve acele kamulaştırma kararlarının adaletsizlik yaratması..."
+                        </blockquote>
+                    </div>
+                </div>
+            </section>
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        await checkLocalAuth(user.uid, db);
-                        setupListeners(db, user);
+            <!-- TAB 4: METODOLOJİ (METHODOLOGY) -->
+            <section id="tab-metodoloji" class="tab-content">
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose max-w-none">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Yeni Kodlama Yaklaşımının Gerekçesi</h3>
+                    <p class="text-slate-600 mb-4">
+                        Gelen soruda belirtilen <em>"2 kodla kategori mi olur? Hemen hemen her kategoride hem paralel hem zıt yönde veriler var bende"</em> tespiti, nitel araştırmaların en kritik kırılma noktalarından biridir. 
+                    </p>
+                    <p class="text-slate-600 mb-4">
+                        Önceki yapıda kategoriler "Arz Güvenliği Hegemonyası" gibi taraf tutan (yargı bildiren) başlıklardan oluşuyordu. Bu durum, "iklimi öncelik gören" zıt verileri bu kategori altına yerleştirmeyi imkânsız kılıyordu.
+                    </p>
+                    <h4 class="text-lg font-semibold text-slate-800 mt-6 mb-2">Neler Değiştirildi?</h4>
+                    <ul class="list-disc pl-5 text-slate-600 space-y-2">
+                        <li><strong>Kategoriler Nötrleştirildi:</strong> Örneğin, "İklimin İkinci Plana Atılması" kategorisi silindi. Yerine tamamen nötr olan <strong>"Öncelik Hiyerarşisi"</strong> kategorisi açıldı.</li>
+                        <li><strong>Zıtlıklar Kod Düzeyine İndirildi:</strong> Nötr kategorinin (Öncelik Hiyerarşisi) altına; hem <em>"Arz Güvenliğinin Baskınlığı"</em> kodu, hem de zıttı olan <em>"İklimin Ana Eksen Olması Gerekliliği"</em> kodu eklendi.</li>
+                        <li><strong>Kod Sayısı Artırıldı:</strong> Literatürdeki doygunluk (saturation) kuralı gereği, alt başlıklar zenginleştirilerek her kategoriye en az 4 kod atandı.</li>
+                        <li><strong>Diyalektik Yapı Kuruldu:</strong> Tezin bulgularını yazarken; "Türkiye'nin öncelik hiyerarşisinde aktörler ikiye bölünmüştür: Bir yanda arz güvenliğini savunanlar (Kod 1), diğer yanda iklimi merkeze alanlar (Kod 2)" şeklinde muazzam bir tartışma (discussion) yazabilmenizin önü açıldı.</li>
+                    </ul>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Data and Logic -->
+    <script>
+        // --- DATA STRUCTURE (The revised coding framework based on user request) ---
+        // Stance Types: 'positive' (İklim odaklı/Ekolojik), 'negative' (Geleneksel/Fosil/Engel), 'neutral' (Yapısal/Yönetişim), 'pragmatic' (Ekonomik/Fırsatçı)
+        const codebookData = [
+            {
+                themeName: "TEMA 1: ENERJİ VE İKLİM SİYASETİNİN ÖNCELİKLERİ",
+                categories: [
+                    {
+                        catName: "Kategori 1.1: Öncelik Hiyerarşisi ve Hedef Dengesi",
+                        description: "Enerji politikaları ile iklim hedefleri arasındaki dengenin nasıl kurulduğu ve aktörlerin öncelik sıralamaları.",
+                        codes: [
+                            { name: "Arz Güvenliği ve Kesintisiz Enerji Baskınlığı (Baz Yük Argümanı)", stance: "negative" },
+                            { name: "Ekonomik Büyüme, Sanayi ve İstihdam Odaklılık", stance: "pragmatic" },
+                            { name: "İklim Değişikliği Hedeflerinin Siyasette Ana Eksen Olması Gerekliliği", stance: "positive" },
+                            { name: "İklim Politikalarının Geleneksel Enerji Planlamasında İkincil Konumda Kalması", stance: "negative" },
+                            { name: "Fosil Yakıt Genişlemesi ile İklim Taahhütleri Arasındaki Tezatlık", stance: "neutral" }
+                        ]
+                    },
+                    {
+                        catName: "Kategori 1.2: İklim Değişikliğinin Çerçevelenişi (Algı)",
+                        description: "İklim krizinin bir tehdit, fırsat, maliyet veya araç olarak nasıl tanımlandığı.",
+                        codes: [
+                            { name: "İklimin Kalkınma Önünde Bir Engel / Risk Alanı Olarak Görülmesi", stance: "negative" },
+                            { name: "Krizi Fırsata Çevirme: Yeni Yatırım, Finansman ve Teknoloji Alanı", stance: "pragmatic" },
+                            { name: "Uluslararası Fonlara (AB vb.) Erişim İçin İklimin Araçsallaştırılması", stance: "pragmatic" },
+                            { name: "Söylemde (Vitrinde) Uyumlu Ancak Pratikte Çelişkili Yaklaşımlar", stance: "neutral" },
+                            { name: "İklimin Dış Kaynaklı Bir Yaptırım (Sınırda Karbon vb.) Olarak Çerçevelenmesi", stance: "pragmatic" }
+                        ]
                     }
-                });
-            } catch (e) {
-                console.error("Firebase Hatası:", e);
-            }
-
-            setInterval(updateCounters, 1000 * 60 * 5);
-            updateCounters();
-        };
-
-        const setupListeners = (db, user) => {
-            if (!user) return;
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'ozel_notlar'), 
-                (snap) => {
-                    allNotes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderNotes();
-                }, 
-                (err) => console.warn(err.message)
-            );
-
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'quotes'), 
-                (snap) => {
-                    if(snap.exists()) {
-                        quotesPool = snap.data().list || [];
-                        const area = document.getElementById('quotes-bulk');
-                        if(area) area.value = quotesPool.join('\n');
-                    } else {
-                        quotesPool = ["Hoş geldin seni çok seviyorum"];
+                ]
+            },
+            {
+                themeName: "TEMA 2: KARAR ALMA SÜREÇLERİ, YÖNETİŞİM VE AKTÖRLER",
+                categories: [
+                    {
+                        catName: "Kategori 2.1: Kurumsal Yapı ve Yasal Koordinasyon",
+                        description: "Devlet içindeki kurumlar arası uyum, mevzuat değişiklikleri ve yerel-merkezi yönetim ilişkisi.",
+                        codes: [
+                            { name: "Kurumlar Arasında (Bakanlıklar arası) Politika ve Vizyon Çatışması", stance: "neutral" },
+                            { name: "Mevzuat ve Yönetmeliklerin Sürekli Değişmesinin Yarattığı İstikrarsızlık", stance: "neutral" },
+                            { name: "Merkeziyetçi Karar Alma Süreçleri ve Yukarıdan Aşağıya Politikalar", stance: "negative" },
+                            { name: "Yerel Yönetimlerin Bürokratik Engellerle ve Yetki Sınırlarıyla Karşılaşması", stance: "neutral" },
+                            { name: "Bütüncül, Tek Sesli ve Entegre Bir Devlet Stratejisine Duyulan İhtiyaç", stance: "positive" }
+                        ]
+                    },
+                    {
+                        catName: "Kategori 2.2: Aktörlerin Konumlanışı ve Motivasyonları",
+                        description: "Sivil toplum, iş dünyası ve bürokrasinin konuya farklı yaklaşım biçimleri.",
+                        codes: [
+                            { name: "Sivil Toplumun Ekolojik/Çevresel Kaygıları Temel Alması", stance: "positive" },
+                            { name: "İş Dünyasının Rekabet, Risk Yönetimi ve İhracat (TÜSİAD) Odaklılığı", stance: "pragmatic" },
+                            { name: "Bürokrasinin Statükocu, Enerji Arzı Odaklı ve Dirençli Tutumu", stance: "negative" },
+                            { name: "Farklı Aktörlerin Ortak Dili Konuşamaması ve İletişim Kopukluğu", stance: "neutral" }
+                        ]
                     }
-                    displayDailyMessage();
-                },
-                (err) => console.warn(err.message)
-            );
-        };
+                ]
+            },
+            {
+                themeName: "TEMA 3: SÜRDÜRÜLEBİLİRLİK, ENERJİ ADALETİ VE TOPLUMSAL ETKİ",
+                categories: [
+                    {
+                        catName: "Kategori 3.1: Enerji Adaleti, Demokrasi ve Katılım",
+                        description: "Projelerin yerel halka etkisi, mülkiyet hakları ve karar alma süreçlerine katılım.",
+                        codes: [
+                            { name: "ÇED ve Karar Süreçlerinde Yerel Halkın Dışlanması / Söz Hakkı Olmaması", stance: "negative" },
+                            { name: "Enerji Yatırım Getirilerinin Yerel Topluluklara Yansımaması", stance: "negative" },
+                            { name: "Acele Kamulaştırma Kararlarının Yarattığı Mülkiyet ve Adalet Sorunları", stance: "negative" },
+                            { name: "Enerji Kooperatiflerinin ve Dağıtık Enerji Modellerinin İşletilememesi", stance: "neutral" },
+                            { name: "Yerel Halkın Talepleriyle Yatırımcı Çıkarlarının Çatışması", stance: "neutral" }
+                        ]
+                    },
+                    {
+                        catName: "Kategori 3.2: Ekolojik Etki ve Sürdürülebilirlik Anlayışı",
+                        description: "Yenilenebilir projelerin doğaya etkisi ve sürdürülebilirlik kavramının içinin doldurulması.",
+                        codes: [
+                            { name: "Yenilenebilir Projelerin (JES, Rüzgâr, İletim Hatları) Ekolojik Tahribat Yaratması", stance: "negative" },
+                            { name: "Kalkınma Hedeflerinin Yalnızca 'Kutu Doldurma' (Göstermelik) Yaklaşımıyla Ele Alınması", stance: "neutral" },
+                            { name: "Kısa Vadeli Ekonomik Rantın, Uzun Vadeli Sürdürülebilirliğe Tercih Edilmesi", stance: "negative" },
+                            { name: "Doğal Varlıkların Korunarak Sonraki Nesillere Aktarılması Bilinci", stance: "positive" }
+                        ]
+                    }
+                ]
+            }
+        ];
 
-        async function checkLocalAuth(userId, db) {
-            try {
-                const snap = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'status'));
-                if (snap.exists()) {
-                    currentUser = snap.data().name;
+        // --- UI RENDERING LOGIC ---
+        
+        // Tab Switching Function
+        function switchTab(tabId) {
+            // Update buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.replace('bg-transparent', 'bg-indigo-600');
+                    btn.classList.replace('text-slate-300', 'text-white');
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                } else {
+                    btn.classList.replace('bg-indigo-600', 'bg-transparent');
+                    btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+                    btn.classList.remove('bg-indigo-600', 'text-white');
                 }
-                updateUI();
-            } catch (e) { 
-                currentUser = null; 
-                updateUI(); 
+            });
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+
+            // Update Header Title based on tab
+            const titles = {
+                'tab-yapi': "Revize Edilmiş Nötr Kodlama Şablonu",
+                'tab-dashboard': "Veri Eğilimleri ve Zıtlık Analizi",
+                'tab-alintilar': "Söylem ve Kanıt Eşleşmeleri",
+                'tab-metodoloji': "Metodolojik Değerlendirme"
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            // Render charts if dashboard tab is opened
+            if(tabId === 'tab-dashboard') {
+                renderCharts();
             }
         }
 
-        window.login = async (name) => {
-            const auth = getAuth();
-            const db = getFirestore();
-            if (!auth.currentUser) return showToast("Bağlantı bekleniyor...");
-            
-            const pass = prompt(`${name} için şifre:`);
-            const correctPass = name === 'Derya' ? '1881' : '1992';
+        // Color Mapping for Stances
+        const stanceStyles = {
+            positive: "bg-emerald-50 border-emerald-200 text-emerald-800 border-l-4 border-l-emerald-500", // İklim odaklı
+            negative: "bg-rose-50 border-rose-200 text-rose-800 border-l-4 border-l-rose-500", // Geleneksel/Fosil/Engel
+            neutral: "bg-slate-100 border-slate-200 text-slate-700 border-l-4 border-l-slate-400", // Yapısal/Eleştirel
+            pragmatic: "bg-amber-50 border-amber-200 text-amber-800 border-l-4 border-l-amber-500" // Fırsatçı/Ekonomik
+        };
 
-            if (pass === correctPass) {
-                currentUser = name;
-                await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'status'), { 
-                    name: name, 
-                    lastLogin: Date.now() 
+        const stanceLabels = {
+            positive: "İklim/Ekoloji Odaklı Görüş",
+            negative: "Geleneksel/Statüko/Fosil Görüş",
+            neutral: "Yapısal/Yönetişimsel Tespit",
+            pragmatic: "Ekonomik/Pragmatik Görüş"
+        };
+
+        // Render Codebook
+        function renderCodebook() {
+            const container = document.getElementById('themes-container');
+            let htmlContent = '';
+
+            codebookData.forEach((theme, tIndex) => {
+                htmlContent += `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-800 px-6 py-4">
+                            <h2 class="text-lg font-bold text-white">${theme.themeName}</h2>
+                        </div>
+                        <div class="p-6 space-y-6">
+                `;
+
+                theme.categories.forEach((cat, cIndex) => {
+                    htmlContent += `
+                        <div class="border border-indigo-100 rounded-lg p-5 bg-indigo-50/30">
+                            <div class="mb-4">
+                                <h3 class="text-md font-bold text-indigo-900">${cat.catName} <span class="text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-1 rounded ml-2">Nötr Kategori</span></h3>
+                                <p class="text-sm text-slate-500 mt-1">${cat.description}</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+                    `;
+
+                    cat.codes.forEach(code => {
+                        htmlContent += `
+                            <div class="code-card p-3 rounded border ${stanceStyles[code.stance]} text-sm">
+                                <div class="font-medium">${code.name}</div>
+                                <div class="text-[10px] uppercase tracking-wider mt-2 opacity-75 font-semibold">${stanceLabels[code.stance]}</div>
+                            </div>
+                        `;
+                    });
+
+                    htmlContent += `
+                            </div>
+                        </div>
+                    `;
                 });
-                showToast(`Hoş geldin ${name}!`);
-                updateUI();
-            } else {
-                showToast("Şifre hatalı!");
-            }
-        };
 
-        window.logout = async () => {
-            const db = getFirestore();
-            const auth = getAuth();
-            currentUser = null;
-            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'status'), { name: null });
-            updateUI();
-        };
+                htmlContent += `
+                        </div>
+                    </div>
+                `;
+            });
 
-        function displayDailyMessage() {
-            const quoteEl = document.getElementById('current-quote');
-            if(!quoteEl) return;
-
-            if (!currentUser) {
-                quoteEl.innerText = "Görmek için giriş yapmalısın sevgilim...";
-                return;
-            }
-
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = now - start;
-            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-            if (quotesPool.length > 0) {
-                const idx = dayOfYear % quotesPool.length;
-                quoteEl.innerText = `"${quotesPool[idx]}"`;
-                quoteEl.className = "text-rose-800 text-xl md:text-2xl font-bold italic leading-relaxed quote-active-text";
-            }
+            container.innerHTML = htmlContent;
         }
 
-        function updateUI() {
-            const modeText = document.getElementById('mode-text');
-            const manageBtn = document.getElementById('manage-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const noteTitle = document.getElementById('notes-title');
-            const noteLabel = document.getElementById('note-target-label');
+        // --- CHART LOGIC (Chart.js) ---
+        let doughnutChartInstance = null;
+        let barChartInstance = null;
 
-            if (currentUser) {
-                if(modeText) modeText.innerText = currentUser;
-                if(logoutBtn) logoutBtn.classList.remove('hidden-mode');
-                if(manageBtn) manageBtn.classList.remove('hidden-mode');
-                
-                if (noteLabel) noteLabel.innerText = currentUser === 'İlker' ? "Derya İçin Not Bırak" : "İlker İçin Not Bırak";
-                if (noteTitle) noteTitle.innerText = currentUser === 'İlker' ? "📍 Derya'dan Mesajlar" : "📍 İlker'den Mesajlar";
-            } else {
-                if(modeText) modeText.innerText = "Gözlemci";
-                if(manageBtn) manageBtn.classList.add('hidden-mode');
-                if(logoutBtn) logoutBtn.classList.add('hidden-mode');
-                if(noteTitle) noteTitle.innerText = "📍 Özel Notlar";
-            }
-            renderNotes();
-            displayDailyMessage();
-        }
+        function renderCharts() {
+            // Data Aggregation
+            let counts = { positive: 0, negative: 0, neutral: 0, pragmatic: 0 };
+            let catNames = [];
+            let catPos = [];
+            let catNeg = [];
 
-        function renderNotes() {
-            const body = document.getElementById('notes-body');
-            if(!body) return;
+            codebookData.forEach(theme => {
+                theme.categories.forEach(cat => {
+                    // For short names in chart
+                    let shortName = cat.catName.split(':')[1].trim();
+                    catNames.push(shortName);
+                    
+                    let pCount = 0;
+                    let nCount = 0;
 
-            if (!currentUser) {
-                body.innerHTML = '<tr><td colspan="4" class="p-24 text-center text-rose-200 italic font-bold">İçerik sadece Derya ve İlker içindir.</td></tr>';
-                return;
-            }
+                    cat.codes.forEach(code => {
+                        counts[code.stance]++;
+                        if(code.stance === 'positive') pCount++;
+                        if(code.stance === 'negative' || code.stance === 'pragmatic') nCount++; // Grouping pragmatic and negative as "non-climate-centric" for contrast
+                    });
 
-            const targetSender = currentUser === 'İlker' ? 'Derya' : 'İlker';
-            const visible = allNotes.filter(n => n.sender === targetSender).sort((a,b) => b.createdAt - a.createdAt);
-
-            if (visible.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" class="p-24 text-center text-rose-300 italic font-bold">Henüz sana bir not gelmemiş sevgilim...</td></tr>';
-                return;
-            }
-
-            body.innerHTML = visible.map(n => `
-                <tr class="hover:bg-rose-50/50 transition-colors text-sm">
-                    <td class="px-8 py-6 text-rose-400 font-bold">${new Date(n.createdAt).toLocaleDateString('tr-TR')}</td>
-                    <td class="px-8 py-6 font-black text-rose-600">${n.sender}</td>
-                    <td class="px-8 py-6 important-note text-lg">${n.text}</td>
-                    <td class="px-8 py-6 text-right">
-                        <button onclick="window.deleteNote('${n.id}')" class="text-rose-200 hover:text-rose-500 font-bold text-xs uppercase">SİL</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        window.addNote = async () => {
-            if(!currentUser) return;
-            const db = getFirestore();
-            const textEl = document.getElementById('note-text');
-            if(!textEl || !textEl.value.trim()) return;
-            
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'ozel_notlar', `n-${Date.now()}`), {
-                    sender: currentUser,
-                    receiver: currentUser === 'İlker' ? 'Derya' : 'İlker',
-                    text: textEl.value.trim(),
-                    createdAt: Date.now()
+                    catPos.push(pCount);
+                    catNeg.push(nCount);
                 });
-                textEl.value = '';
-                showToast("Mesajın gökyüzüne fırlatıldı! 🚀");
-                if(!document.getElementById('admin-panel').classList.contains('translate-x-full')) window.toggleAdmin();
-            } catch (e) { showToast("Hata!"); }
-        };
+            });
 
-        window.saveQuotes = async () => {
-            if(currentUser !== 'İlker') return alert("Sadece İlker güncelleyebilir.");
-            const db = getFirestore();
-            const area = document.getElementById('quotes-bulk');
-            if(!area) return;
-            const list = area.value.split('\n').filter(s => s.trim() !== "");
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'quotes'), { list });
-                showToast("Hikayemiz güncellendi!");
-            } catch (e) { showToast("Hata!"); }
-        };
+            // 1. Doughnut Chart (Overall Distribution)
+            const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+            if(doughnutChartInstance) doughnutChartInstance.destroy();
+            
+            doughnutChartInstance = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['İklim/Ekoloji Odaklı', 'Geleneksel/Fosil Odağı', 'Yapısal/Eleştirel', 'Ekonomik/Pragmatik'],
+                    datasets: [{
+                        data: [counts.positive, counts.negative, counts.neutral, counts.pragmatic],
+                        backgroundColor: ['#10b981', '#f43f5e', '#94a3b8', '#f59e0b'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: {family: "'Inter', sans-serif"} } }
+                    }
+                }
+            });
 
-        window.deleteNote = async (id) => { 
-            if(confirm('Silinsin mi?')) {
-                try {
-                    await deleteDoc(doc(getFirestore(), 'artifacts', appId, 'public', 'data', 'ozel_notlar', id));
-                    showToast("Not silindi.");
-                } catch (e) { showToast("Hata!"); }
-            }
-        };
+            // 2. Bar Chart (Category Contrast)
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            if(barChartInstance) barChartInstance.destroy();
 
-        function updateCounters() {
-            const now = new Date();
-            const dM = Math.floor((now - marriageDate) / (1000 * 60 * 60 * 24));
-            const dT = Math.floor((now - meetingDate) / (1000 * 60 * 60 * 24));
-            const mEl = document.getElementById('marriage-counter');
-            const mtEl = document.getElementById('meeting-counter');
-            if(mEl) mEl.innerText = dM.toLocaleString();
-            if(mtEl) mtEl.innerText = dT.toLocaleString();
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: catNames,
+                    datasets: [
+                        {
+                            label: 'İklim Odaklı Kod Sayısı',
+                            data: catPos,
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Geleneksel/Fosil/Pragmatik Kod Sayısı',
+                            data: catNeg,
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 },
+                            title: { display: true, text: 'Kod Sayısı' }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(value) {
+                                    // Wrap long labels
+                                    let label = this.getLabelForValue(value);
+                                    if (label.length > 15) {
+                                        return label.substr(0, 15) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label; // Show full label on hover
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
-        window.toggleAdmin = () => document.getElementById('admin-panel').classList.toggle('translate-x-full');
-        window.switchTab = (tab) => {
-            const tNotes = document.getElementById('tab-notes');
-            const tQuotes = document.getElementById('tab-quotes');
-            const sNotes = document.getElementById('sidebar-notes-content');
-            const sQuotes = document.getElementById('sidebar-quotes-content');
-            
-            if(tNotes) tNotes.className = `tab-btn flex-1 text-[10px] font-bold py-2 rounded-xl ${tab === 'notes' ? 'active' : 'inactive'}`;
-            if(tQuotes) tQuotes.className = `tab-btn flex-1 text-[10px] font-bold py-2 rounded-xl ${tab === 'quotes' ? 'active' : 'inactive'}`;
-            if(sNotes) sNotes.className = tab === 'notes' ? 'space-y-4' : 'hidden';
-            if(sQuotes) sQuotes.className = tab === 'quotes' ? 'space-y-4' : 'hidden';
+        // Initialize Application
+        window.onload = () => {
+            renderCodebook();
+            // Chart rendering is deferred to when the tab is clicked to ensure container size is computed correctly
         };
 
-        startApp();
     </script>
 </body>
 </html>
